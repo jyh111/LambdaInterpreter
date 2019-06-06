@@ -9,7 +9,25 @@ public class Abstraction extends AST {
         body = b;
     }
 
+    public Identifier getParam(){
+        return this.param;
+    }
+
+    public AST getBody(){
+        return this.body;
+    }
+
+    public void setBody(AST body){
+        this.body=body;
+    }
+
+    public void setParam(Identifier param){
+        this.param = param;
+    }
+
     public String toString(){
-        return "";
+        String result = "";
+        result += "\\."+body.toString();
+        return result;
     }
 }

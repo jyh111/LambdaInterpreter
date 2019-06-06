@@ -27,17 +27,43 @@ public class Interpreter {
     }
 
     private   AST evalAST(AST ast){
-        //write your code here
+        while (true){
+        if(isApplication(ast)){
+            ast = (Application)ast;
+            if(isApplication(((Application) ast).getLhs())){
+                ((Application) ast).setLhs(evalAST(((Application) ast).getLhs()));
+                if(((Application) ast).getRhs()==null){
+                    return ((Application) ast).getLhs();
+                }
+                if(((Application) ast).getLhs() instanceof Application)
+                return ast;
+            }else if(isAbstraction(((Application) ast).getLhs())){
+                ((Application) ast).setRhs(evalAST(((Application) ast).getRhs()));
+                ast = substitute(((Abstraction)((Application) ast).getLhs()).getBody(),((Application) ast).getRhs());
+            }else {
+                if(isApplication(((Application) ast).getRhs())){
+                    ((Application) ast).setRhs(evalAST(((Application) ast).getRhs()));
+                    return ast;
+                }else if(isAbstraction(((Application) ast).getRhs())){
+                    ((Application) ast).setRhs(evalAST(((Application) ast).getRhs()));
+                    return ast;
+                }else {
+                    return ast;
+                }
+            }
+        }else if(isAbstraction(ast)){
+            ast = (Abstraction)ast;
+            ((Abstraction) ast).setBody(evalAST(((Abstraction) ast).getBody()));
+            return ast;
+        }else {
+            return ast;
+        }
 
-        return null;
-
+    }
     }
     private AST substitute(AST node,AST value){
 
         return shift(-1,subst(node,shift(1,value,0),0),0);
-
-
-
     }
 
     /**
@@ -57,7 +83,21 @@ public class Interpreter {
 
      */
     private AST subst(AST node, AST value, int depth){
-        //write your code here
+        if(isApplication(node)){
+            node = (Application)node;
+            Application application = new Application(subst(((Application) node).getLhs(),value,depth),subst(((Application) node).getRhs(),value,depth));
+            return application;
+        }else if(isAbstraction(node)){
+            node = (Abstraction)node;
+            return new Abstraction(((Abstraction) node).getParam(),subst(((Abstraction) node).getBody(),value,depth+1));
+        }else if(isIdentifier(node)){
+            node = (Identifier)node;
+            if(((Identifier) node).value.equals(String.valueOf(depth))){
+                return shift(depth,value,0);
+            }else {
+                return node;
+            }
+        }
 
         return null;
 
@@ -82,8 +122,23 @@ public class Interpreter {
      */
 
     private AST shift(int by, AST node,int from){
-        //write your code here
-
+        if(isApplication(node)){
+            node = (Application)node;
+            Application application = new Application(shift(by,((Application) node).getLhs(),from),shift(by,((Application) node).getRhs(),from));
+            return application;
+        }else if(isAbstraction(node)){
+            node = (Abstraction)node;
+            return new Abstraction(((Abstraction) node).getParam(),shift(by,((Abstraction) node).getBody(),from+1));
+        }else if(isIdentifier(node)){
+            node = (Identifier)node;
+            if(((Identifier) node).getDebruin()==-1)
+            return node;
+            else {
+                if(((Identifier) node).getDebruin()>=from)
+                ((Identifier) node).setDebruin(((Identifier) node).getDebruin()+by);
+                return node;
+            }
+        }
         return null;
 
     }
@@ -117,7 +172,7 @@ public class Interpreter {
         return "(" +  "(" + func + x +")"+ y + ")";
     }
     private static String app(String func, String cond, String x, String y){
-        return "(" + func + cond + x + y + ")";
+        return "(" +"("+"(" + func + cond +")"+ x+")" + y + ")";
     }
 
     public static void main(String[] args) {

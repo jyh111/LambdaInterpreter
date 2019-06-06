@@ -72,6 +72,9 @@ public class Parser {
             return null;
         }else if(lexer.match(TokenType.LAMBDA)){
             return term(ctx);
+        }else if(lexer.match(null)){
+            lexer.skip(null);
+            return atom(ctx);
         }
         return null;
     }

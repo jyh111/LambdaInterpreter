@@ -62,7 +62,6 @@ public class Interpreter {
     }
     }
     private AST substitute(AST node,AST value){
-
         return shift(-1,subst(node,shift(1,value,0),0),0);
     }
 
@@ -85,8 +84,12 @@ public class Interpreter {
     private AST subst(AST node, AST value, int depth){
         if(isApplication(node)){
             node = (Application)node;
+            if(((Application) node).getRhs()==null){
+                return subst(((Application) node).getLhs(),value,depth);
+            }else {
             Application application = new Application(subst(((Application) node).getLhs(),value,depth),subst(((Application) node).getRhs(),value,depth));
             return application;
+            }
         }else if(isAbstraction(node)){
             node = (Abstraction)node;
             return new Abstraction(((Abstraction) node).getParam(),subst(((Abstraction) node).getBody(),value,depth+1));
@@ -98,9 +101,7 @@ public class Interpreter {
                 return node;
             }
         }
-
         return null;
-
     }
 
     /**
@@ -131,16 +132,9 @@ public class Interpreter {
             return new Abstraction(((Abstraction) node).getParam(),shift(by,((Abstraction) node).getBody(),from+1));
         }else if(isIdentifier(node)){
             node = (Identifier)node;
-            if(((Identifier) node).getDebruin()==-1)
-            return node;
-            else {
-                if(((Identifier) node).getDebruin()>=from)
-                ((Identifier) node).setDebruin(((Identifier) node).getDebruin()+by);
-                return node;
-            }
+            return new Identifier(((Identifier)node).name,((Identifier) node).getDebruin()+((Identifier) node).getDebruin()+(((Identifier) node).getDebruin()>=from?by:0));
         }
         return null;
-
     }
     static String ZERO = "(\\f.\\x.x)";
     static String SUCC = "(\\n.\\f.\\x.f (n f x))";

@@ -30,6 +30,7 @@ public class Application extends AST{
             return lhs.toString();
         }else {
         return "("+lhs.toString()+" "+rhs.toString()+")";
+
         }
     }
 }

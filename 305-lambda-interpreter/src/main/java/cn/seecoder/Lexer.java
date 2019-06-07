@@ -3,8 +3,7 @@ package cn.seecoder;
 
 import java.util.ArrayList;
 import java.util.regex.Pattern;
-
-import static javafx.scene.input.KeyCode.Z;
+import javafx.scene.input;
 
 public class Lexer{
 

@@ -3,7 +3,7 @@ package cn.seecoder;
 
 import java.util.ArrayList;
 import java.util.regex.Pattern;
-import javafx.scene.input;
+
 
 public class Lexer{
 

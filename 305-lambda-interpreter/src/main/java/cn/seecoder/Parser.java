@@ -45,15 +45,16 @@ public class Parser {
 
 
     private AST application(ArrayList<String> ctx){
-        Application application = new Application(atom(ctx),atom(ctx));
-        if(application.getRhs()==null){
-            return application.getLhs();
-        }else {
-            while (application.getRhs()!=null){
-                application = new Application(application,atom(ctx));
+        Application application = new Application();
+        application.setLhs(atom(ctx));
+        while (true){
+            application.setRhs(atom(ctx));
+            if(application.getRhs()==null)
+                return application.getLhs();
+            else {
+                application.setLhs(new Application(application.getLhs(),application.getRhs()));
+            }
         }
-    }
-        return application;
     }
 
     private AST atom(ArrayList<String> ctx){

@@ -9,6 +9,10 @@ public class Application extends AST{
         rhs = s;
     }
 
+    public Application(){
+
+    }
+
     public void setLhs(AST lhs){
         this.lhs=lhs;
     }

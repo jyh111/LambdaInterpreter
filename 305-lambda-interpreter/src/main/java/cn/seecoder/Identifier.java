@@ -19,10 +19,6 @@ public class Identifier extends AST {
         this.value = String.valueOf(value);
     }
 
-    public Identifier(String n){
-        name= n;
-        value = String.valueOf(0);
-    }
 
     public String toString(){
 

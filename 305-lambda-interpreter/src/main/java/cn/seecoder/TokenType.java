@@ -6,5 +6,6 @@ public enum TokenType {
      LPAREN,
      RPAREN,
      LCID,
-     DOT
+     DOT,
+     WRONG
 }

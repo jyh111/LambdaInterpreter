@@ -19,17 +19,13 @@ public class Parser {
         return ast;
     }
 
-    private void parseError(TokenType expected){
-        System.out.println("Expected:"+expected+" but was:"+lexer.getTokenType(String.valueOf(lexer.getChar())));
-        System.exit(1);
-    }
 
     private AST term(ArrayList<String> ctx){
        if(lexer.match(TokenType.LAMBDA)){
                 numOfLambda++;
                 String tempIdentifier = String.valueOf(lexer.nextChar());
                 ctx.add(tempIdentifier);
-                lexer.setIndex(lexer.getIndex()+1);
+                lexer.skip(TokenType.LCID);
                 lexer.skip(TokenType.DOT);
                 AST body = term(ctx);
                 int tempValue = ctx.size()-1-ctx.lastIndexOf(tempIdentifier);
@@ -81,7 +77,7 @@ public class Parser {
     }
 
     public static void main(String[] args){
-        Lexer lexer = new Lexer("(\\f.\\x.x)");
+        Lexer lexer = new Lexer("(\\x.\\(xxx))(\\x.xxx)");
         Parser parser = new Parser(lexer);
         System.out.println(parser.parse().toString());
     }

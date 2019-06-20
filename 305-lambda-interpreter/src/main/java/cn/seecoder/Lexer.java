@@ -1,6 +1,7 @@
 package cn.seecoder;
 
 
+import javax.swing.*;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 
@@ -10,7 +11,8 @@ public class Lexer{
     public String source;
     private int index;
     public TokenType token;
-    public String tokenvalue;
+    private JTextArea area;
+    public boolean isValid;
 
     public void setIndex(int index){
         this.index=index;
@@ -21,13 +23,84 @@ public class Lexer{
     }
 
     public Lexer(String s){
+        isValid = true;
         index = 0;
         source = s.replace(" ","");
-        System.out.println(getTokenType(String.valueOf(s.charAt(0))));
+        if(!checkValid()){
+            isValid = false;
+            System.exit(1);
+        }
+        System.out.println(getTokenType(String.valueOf(getChar())));
         for(int i=0;i<source.length();i++){
             System.out.println(nextToken());
         }
         index = 0;
+    }
+
+    public Lexer(String s, JTextArea area){
+        isValid = true;
+        this.area = area;
+        index = 0;
+        source = s.replace(" ","");
+        if(!checkValid()){
+            isValid = false;
+        }else {
+        System.out.println(getTokenType(String.valueOf(getChar())));
+        for(int i=0;i<source.length();i++){
+            System.out.println(nextToken());
+            }
+        }
+        index = 0;
+    }
+
+    private boolean checkValid(){
+        ArrayList<String> invalidInput = new ArrayList<>();
+        int numOfLparen = 0;
+        int numOfRparen = 0;
+        index = 0;
+        token=getTokenType(String.valueOf(getChar()));
+        if(token==TokenType.WRONG){
+            invalidInput.add(String.valueOf(getChar()));
+        }else if(token==TokenType.LPAREN){
+            numOfLparen++;
+        }else if(token==TokenType.RPAREN){
+            numOfRparen++;
+        }
+        for(int i=0;i<source.length();i++){
+            token = nextToken();
+            if(token==TokenType.WRONG){
+                invalidInput.add(String.valueOf(getChar()));
+            }else if(token==TokenType.LPAREN){
+                numOfLparen++;
+            }else if(token==TokenType.RPAREN){
+                numOfRparen++;
+            }
+        }
+        //check invalid char
+        if(invalidInput.size()!=0){
+            System.out.println("Grammar Error!");
+            System.out.println("Invalid Charset:"+invalidInput);
+            if(area!=null){
+                area.append("Grammar Error!\n");
+                area.append("Invalid Charset:"+invalidInput+"\n");
+            }
+            index = 0;
+            return false;
+        }
+        //check paren
+        if(numOfLparen!=numOfRparen){
+            System.out.println("Grammar Error!");
+            System.out.println("Unpaired parens, please check again.");
+            if(area!=null){
+                area.append("Grammar Error!\n");
+                area.append("Unpaired parens, please check again.\n");
+            }
+            index = 0;
+            return false;
+        }
+
+        index = 0; //返回原始状态
+        return true;
     }
 
     public TokenType getTokenType(String token){
@@ -43,7 +116,7 @@ public class Lexer{
         }else if(token.equals("\\")){
             tokenType = TokenType.LAMBDA;
         }else {
-            assert true:"invalid input";
+            tokenType = TokenType.WRONG;
         }
         return  tokenType;
     }
@@ -57,13 +130,6 @@ public class Lexer{
         return getTokenType(token);
     }
 
-    private TokenType previousToken(){
-        index--;
-        if(index<0)
-            return null;
-        String token = String.valueOf(source.charAt(index));
-        return getTokenType(token);
-    }
 
     // get next char
     public char nextChar(){
@@ -76,34 +142,11 @@ public class Lexer{
     }
 
     public char getChar(){
-        if(index>source.length()){
+        if(index>=source.length()){
             return 0;
         }else {
         return source.charAt(index);
         }
-    }
-
-    public boolean previous(TokenType t){
-        boolean result = false;
-        if(previousToken()==t){
-            result = true;
-        }
-        return result;
-    }
-
-
-    //check token == t
-    public boolean next(TokenType t){
-        boolean result = false;
-        if(nextToken()==t){
-            if(index<source.length()){
-                token = getTokenType(String.valueOf(getChar()));
-            }else {
-                token = null;
-            }
-            result = true;
-        }
-        return result;
     }
 
     //assert matching the token type, and move next token
@@ -126,8 +169,16 @@ public class Lexer{
                 token = null;
             }
             return true;
-        }else
-            return false;
+        }else{
+            System.out.println("Grammar error!");
+            System.out.println("Invalid term,please pay attention to the "+(index+1)+"th char or chars near it.");
+            if(area!=null){
+                area.append("Grammar error!\n");
+                area.append("Invalid term,please pay attention to the "+(index+1)+"th char or chars near it.\n");
+            }
+            isValid = false;
+        }
+        return false;
     }
 
     public static void main(String[] args){

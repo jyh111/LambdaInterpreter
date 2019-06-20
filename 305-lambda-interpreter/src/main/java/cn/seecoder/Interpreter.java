@@ -1,13 +1,23 @@
 package cn.seecoder;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
 
 public class Interpreter {
     Parser parser;
     AST astAfterParser;
+    public JTextArea text;
+    private JTextField field;
+    private Interpreter interpreter;
 
     public Interpreter(Parser p){
         parser = p;
         astAfterParser = p.parse();
         //System.out.println("After parser:"+astAfterParser.toString());
+    }
+
+    public Interpreter(){
+
     }
 
 
@@ -20,6 +30,104 @@ public class Interpreter {
     private  boolean isIdentifier(AST ast){
         return ast instanceof Identifier;
     }
+
+    public void setUpGui(){
+        JFrame frame = new JFrame("Lambda Interpreter");
+        JLabel label = new JLabel("Lambda expression:");
+        JPanel inputPanel = new JPanel();
+        JPanel outputPanel = new JPanel();
+        JPanel rsPanel = new JPanel();
+        JPanel buttonPanel = new JPanel();
+        field = new JTextField(30);
+        text = new JTextArea(15,30);
+        text.setLineWrap(true);
+
+        Font labelFont = new Font("serif",Font.BOLD,14);
+        label.setPreferredSize(new Dimension(450,40));
+        label.setFont(labelFont);
+
+        text.setFont(labelFont);
+
+        field.addActionListener(new InputListener());
+
+        JButton resetButton = new JButton("Reset");
+        resetButton.setPreferredSize(new Dimension(100,30));
+        resetButton.setFont(labelFont);
+        resetButton.addActionListener(new ResetButtonListener());
+
+        JButton submitButton = new JButton("OK");
+        submitButton.setPreferredSize(new Dimension(100,30));
+        submitButton.setFont(labelFont);
+        submitButton.addActionListener(new InputListener());
+
+        JButton clearButton = new JButton("Clear");
+        clearButton.setFont(labelFont);
+        clearButton.setPreferredSize(new Dimension(100,30));
+        clearButton.addActionListener(new ClearButtonListener());
+
+        JScrollPane scroller = new JScrollPane(text);
+        scroller.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+        scroller.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+
+        inputPanel.add(label);
+        inputPanel.add(field);
+        inputPanel.add(rsPanel);
+        inputPanel.setLayout(new BoxLayout(inputPanel,BoxLayout.Y_AXIS));
+
+        rsPanel.add(resetButton);
+        rsPanel.add(submitButton);
+
+        outputPanel.add(scroller);
+
+        buttonPanel.add(clearButton);
+
+        frame.getContentPane().add(BorderLayout.NORTH,inputPanel);
+        frame.getContentPane().add(BorderLayout.CENTER,outputPanel);
+        frame.getContentPane().add(BorderLayout.SOUTH,buttonPanel);
+
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(450,500);
+        frame.setVisible(true);
+    }
+
+    class ResetButtonListener implements ActionListener{
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            field.setText("");
+        }
+    }
+
+    class ClearButtonListener implements ActionListener{
+
+        @Override
+        public void actionPerformed(ActionEvent event){
+            text.setText("");
+        }
+    }
+
+    class InputListener implements ActionListener{
+
+        @Override
+        public void actionPerformed(ActionEvent event){
+            if(field.getText()!=null&&field.getText().trim().length()!=0){
+                Lexer lexer = new Lexer(field.getText(),text);
+                Parser parser = new Parser(lexer);
+                if(!lexer.isValid){
+                    text.append("\n");
+                    field.setText("");
+                    return;
+                }
+                interpreter = new Interpreter(parser);
+                text.append(field.getText()+"\n");
+                field.setText("");
+                AST result = interpreter.eval();
+                text.append("=" + result.toString()+"\n\n");
+            }
+        }
+    }
+
+
 
     public AST eval(){
 
@@ -38,12 +146,18 @@ public class Interpreter {
                     ast = substitute(((Abstraction)((Application) ast).getLhs()).getBody(),((Application) ast).getRhs());
                 }else if(isValue(((Application) ast).getLhs())){
                     ((Application) ast).setRhs(evalAST(((Application) ast).getRhs()));
+                    if(text!=null){
+                        text.append("="+ast.toString()+"\n");
+                    }
                 }else{
                     ((Application) ast).setLhs(evalAST(((Application) ast).getLhs()));
                 }
             }else if(isAbstraction(ast)){
                 ast = (Abstraction)ast;
                 ((Abstraction) ast).setBody(evalAST(((Abstraction) ast).getBody()));
+            }
+            if(text!=null){
+            text.append(ast.toString());
             }
         }
     }
@@ -87,7 +201,6 @@ public class Interpreter {
                 return node;
             }
         }
-
     }
 
     /**
@@ -123,6 +236,7 @@ public class Interpreter {
 
     }
 
+
     private boolean isValue(AST node){
         boolean result = false;
         if(node instanceof  Identifier)
@@ -145,6 +259,8 @@ public class Interpreter {
         }
         return result;
     }
+
+
     static String ZERO = "(\\f.\\x.x)";
     static String SUCC = "(\\n.\\f.\\x.f (n f x))";
     static String ONE = app(SUCC, ZERO);
@@ -183,6 +299,7 @@ public class Interpreter {
 
 
         String[] sources = {
+                "((\\f.f) a)",
                 ZERO,//0
                 ONE,//1
                 TWO,//2
@@ -217,6 +334,10 @@ public class Interpreter {
                 app(MIN, FOUR, TWO),//31
         };
 
+        new Interpreter().setUpGui();
+
+
+/*
         for(int i=0 ; i<sources.length; i++) {
 
 
@@ -235,6 +356,8 @@ public class Interpreter {
             System.out.println(i+":" + result.toString());
 
         }
+
+ */
 
     }
 }
